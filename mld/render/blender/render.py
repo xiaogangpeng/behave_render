@@ -26,7 +26,7 @@ def render_current_frame(path):
 
 
 
-def render(npydata, frames_folder, *, mode, faces_path, gt=False,
+def render(npydata, objnpydata, h_data_path, o_data_path, frames_folder, *, mode, gt=False,
            exact_frame=None, num=8, downsample=True,
            canonicalize=True, always_on_floor=False, denoising=True,
            oldrender=True,jointstype="mmm", res="high", init=True,
@@ -63,11 +63,11 @@ def render(npydata, frames_folder, *, mode, faces_path, gt=False,
     if mode == "sequence":
         perc = 0.2
         npydata = prune_begin_end(npydata, perc)
+        objnpydata = prune_begin_end(objnpydata, perc)
 
     if is_mesh:
         from .meshes import Meshes
-        data = Meshes(npydata, gt=gt, mode=mode,
-                      faces_path=faces_path,
+        data = Meshes(npydata, objnpydata, h_data_path, o_data_path, gt=gt, mode=mode,
                       canonicalize=canonicalize,
                       always_on_floor=always_on_floor)
     else:
@@ -99,18 +99,23 @@ def render(npydata, frames_folder, *, mode, faces_path, gt=False,
     if mode == "sequence":
         camera.update(data.get_mean_root())
 
+    imported_human_names = []
     imported_obj_names = []
+    imported_h_contact_names = []
+    imported_o_contact_names = []
     for index, frameidx in enumerate(frameidx):
         if mode == "sequence":
             frac = index / (nframes_to_render-1)
-            mat = data.get_sequence_mat(frac)
+            mat, mat2 = data.get_sequence_mat(frac)
         else:
             mat = data.mat
+            mat2 = data.mat2
             camera.update(data.get_root(frameidx))
 
         islast = index == (nframes_to_render-1)
 
-        objname = data.load_in_blender(frameidx, mat)
+        human_name, h_contact_names = data.load_in_blender(frameidx, mat)
+        obj_name, o_contact_names = data.load_obj_in_blender(frameidx, mat2)
         name = f"{str(index).zfill(4)}"
 
         if mode == "video":
@@ -119,20 +124,29 @@ def render(npydata, frames_folder, *, mode, faces_path, gt=False,
             path = img_path
 
         if mode == "sequence":
-            imported_obj_names.extend(objname)
+            imported_human_names.extend(human_name)
+            imported_obj_names.extend(obj_name)
+            imported_h_contact_names.extend(h_contact_names)
+            imported_o_contact_names.extend(o_contact_names)
         elif mode == "frame":
             camera.update(data.get_root(frameidx))
 
         if mode != "sequence" or islast:
             render_current_frame(path)
-            delete_objs(objname)
+            delete_objs(human_name)
+            delete_objs(obj_name)
+            delete_objs(h_contact_names)
+            delete_objs(o_contact_names)
 
     # bpy.ops.wm.save_as_mainfile(filepath="/Users/mathis/TEMOS_github/male_line_test.blend")
     # exit()
 
     # remove every object created
+    delete_objs(imported_human_names)
     delete_objs(imported_obj_names)
-    delete_objs(["Plane", "myCurve", "Cylinder"])
+    delete_objs(imported_h_contact_names)
+    delete_objs(imported_o_contact_names)
+    delete_objs(["Plane", "myCurve", "Cylinder", "Sphere"])
 
     if mode == "video":
         return frames_folder

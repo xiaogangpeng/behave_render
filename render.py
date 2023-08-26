@@ -39,6 +39,7 @@ def extend_paths(path, keyids, *, onesample=True, number_of_samples=1):
 def render_cli() -> None:
     # parse options
     cfg = parse_args(phase="render")  # parse config file
+    # print(f"==========cfg {cfg}")
     cfg.FOLDER = cfg.RENDER.FOLDER
     # output_dir = Path(os.path.join(cfg.FOLDER, str(cfg.model.model_type) , str(cfg.NAME)))
     # create logger
@@ -60,15 +61,18 @@ def render_cli() -> None:
 
         # render mesh npy first
         for item in file_list:
-            if item.endswith("_mesh.npy"):
+            if item.endswith("smpl_params.npy"):
                 paths.append(os.path.join(cfg.RENDER.DIR, item))
+                
 
-        # then render other npy
-        for item in file_list:
-            if item.endswith(".npy") and not item.endswith("_mesh.npy"):
-                paths.append(os.path.join(cfg.RENDER.DIR, item))
-
-        print(f"begin to render for {paths[0]}")
+        # # then render other npy
+        # for item in file_list:
+        #     if item.endswith(".npy") and not item.endswith("_mesh.npy"):
+        #         paths.append(os.path.join(cfg.RENDER.DIR, item))
+        if paths is not None:
+            print(f"begin to render for {paths[0]}")
+        else:
+            print(f"no smpl .npy file for rendering!")
 
     import numpy as np
 
@@ -97,11 +101,20 @@ def render_cli() -> None:
                 output_dir, path.replace(".npy", ".png").split('/')[-1])
 
         try:
-            data = np.load(path)
+
+            h_data_path = path
+            o_data_path = path.replace("smpl_params.npy", "obj_params.npy")
+            
+            data = np.load(h_data_path, allow_pickle=True).item()['vertices']
+            obj_data = np.load(o_data_path, allow_pickle=True).item()['vertices']
+            data = data.permute(2, 0, 1).numpy()
+            obj_data = obj_data.view(np.ndarray).transpose(2, 0, 1)
+            
             if cfg.RENDER.JOINT_TYPE.lower() == "humanml3d":
                 is_mesh = mesh_detect(data)
                 if not is_mesh:
                     data = data * smplh_to_mmm_scaling_factor
+                    obj_data = obj_data 
         except FileNotFoundError:
             print(f"{path} not found")
             continue
@@ -114,15 +127,16 @@ def render_cli() -> None:
             frames_folder = os.path.join(
                 output_dir, path.replace(".npy", ".png").split("/")[-1]
             )
-
         out = render(
             data,
+            obj_data,
+            h_data_path,
+            o_data_path,
             frames_folder,
             canonicalize=cfg.RENDER.CANONICALIZE,
             exact_frame=cfg.RENDER.EXACT_FRAME,
             num=cfg.RENDER.NUM,
             mode=cfg.RENDER.MODE,
-            faces_path=cfg.RENDER.FACES_PATH,
             downsample=cfg.RENDER.DOWNSAMPLE,
             always_on_floor=cfg.RENDER.ALWAYS_ON_FLOOR,
             oldrender=cfg.RENDER.OLDRENDER,
@@ -153,3 +167,6 @@ def render_cli() -> None:
 
 if __name__ == "__main__":
     render_cli()
+
+
+

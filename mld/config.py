@@ -154,14 +154,18 @@ def parse_args(phase="train"):
 
     # remove None params, and create a dictionnary
     params = parser.parse_args()
+    
+
     # params = {key: val for key, val in vars(opt).items() if val is not None}
 
     # update config from files
     cfg_base = OmegaConf.load('./configs/base.yaml')
     cfg_exp = OmegaConf.merge(cfg_base, OmegaConf.load(params.cfg))
-    cfg_model = get_module_config(cfg_exp.model, cfg_exp.model.target)
+    # print(f"==========cfg {OmegaConf.load(params.cfg)}")
+    # cfg_model = get_module_config(cfg_exp.model, cfg_exp.model.target)
     cfg_assets = OmegaConf.load(params.cfg_assets)
-    cfg = OmegaConf.merge(cfg_exp, cfg_model, cfg_assets)
+    cfg = OmegaConf.merge(cfg_exp, cfg_assets)
+
 
     if phase in ["train", "test"]:
         cfg.TRAIN.BATCH_SIZE = (params.batch_size
@@ -188,6 +192,7 @@ def parse_args(phase="train"):
         cfg.DEMO.OUTALL = params.allinone
 
     if phase == "render":
+        
         if params.npy:
             cfg.RENDER.NPY = params.npy
             cfg.RENDER.INPUT_MODE = "npy"
@@ -199,8 +204,7 @@ def parse_args(phase="train"):
 
     # debug mode
     if cfg.DEBUG:
-        cfg.NAME = "debug--" + cfg.NAME
+        # cfg.NAME = "debug--" + cfg.NAME
         cfg.LOGGER.WANDB.OFFLINE = True
         cfg.LOGGER.VAL_EVERY_STEPS = 1
-
     return cfg

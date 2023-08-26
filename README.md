@@ -276,3 +276,13 @@ Thanks to [TEMOS](https://github.com/Mathux/TEMOS), [ACTOR](https://github.com/M
 This code is distributed under an [MIT LICENSE](LICENSE).
 
 Note that our code depends on other libraries, including SMPL, SMPL-X, PyTorch3D, and uses datasets which each have their own respective licenses that must also be followed.
+
+# /home/ericpeng/Softwares/blender-3.1.2-linux-x64/3.1/python/bin/python3.10 -m pip install --upgrade matplotlib -i https://pypi.tuna.tsinghua.edu.cn/simple --target /home/ericpeng/Softwares/blender-3.1.2-linux-x64/3.1/python/lib/python3.10/site-packages
+
+# blender --background --python render.py -- --cfg=./configs/render.yaml --dir=./template --mode=video --joint_type=HumanML3D
+
+
+
+
+
+

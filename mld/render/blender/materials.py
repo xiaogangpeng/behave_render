@@ -79,6 +79,28 @@ def body_material(r, g, b, a=1, name="body", oldrender=True):
     return material
 
 
+def obj_material(r, g, b, a=1, name="obj", oldrender=True):
+    if oldrender:
+        material = colored_material_diffuse_BSDF(r, g, b, a=a)
+    else:
+        materials = bpy.data.materials
+        material = materials.new(name=name)
+        material.use_nodes = True
+        nodes = material.node_tree.nodes
+        diffuse = nodes["Principled BSDF"]
+        inputs = diffuse.inputs
+
+        settings = DEFAULT_BSDF_SETTINGS.copy()
+        settings["Base Color"] = (r, g, b, a)
+        settings["Subsurface Color"] = (r, g, b, a)
+        settings["Subsurface"] = 0.0
+
+        for setting, val in settings.items():
+            inputs[setting].default_value = val
+
+    return material
+
+
 def colored_material_bsdf(name, **kwargs):
     materials = bpy.data.materials
     material = materials.new(name=name)

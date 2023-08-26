@@ -39,5 +39,5 @@ model:
 
 RENDER:
   BLENDER_PATH: '/apdcephfs/share_1227775/mingzhenzhu/jiangbiao/libs/blender-2.93.2-linux-x64/blender'
-  FACES_PATH: '/apdcephfs/share_1227775/shingxchen/AIMotion/TMOSTData/deps/smplh/smplh.faces'
+  FACES_PATH: '/home/ericpeng/DeepLearning/Projects/human_motion_generation/motion-latent-diffusion/deps/smpl_models/smplh/smplh.faces'
   FOLDER: ./animations
